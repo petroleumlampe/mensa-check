@@ -305,27 +305,21 @@ body {
   margin-top: 14px;
   padding: 10px;
   background-color: #eceae7;
-  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.14) 1px, transparent 1px);
-  background-size: 6px 6px;
+  background-image:
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0, transparent 3px,
+      rgba(0, 0, 0, 0.1) 3px, rgba(0, 0, 0, 0.1) 4px
+    ),
+    radial-gradient(circle, rgba(0, 0, 0, 0.14) 1px, transparent 1px);
+  background-size: 36px 100%, 6px 6px;
+  background-position: right top, 0 0;
+  background-repeat: no-repeat, repeat;
   position: relative;
-  overflow: hidden;
 }
 
-.dinner-block::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 36px;
-  height: 100%;
-  background: repeating-linear-gradient(
-    -45deg,
-    transparent 0,
-    transparent 3px,
-    rgba(0, 0, 0, 0.1) 3px,
-    rgba(0, 0, 0, 0.1) 4px
-  );
-  pointer-events: none;
+.dinner-block .meal.conditional {
+  background: var(--paper);
 }
 
 .dinner-label {
