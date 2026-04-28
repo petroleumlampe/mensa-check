@@ -18,74 +18,174 @@ export async function sendWeeklyEmail(week: FilteredMensaDay[][]): Promise<void>
   await resend.emails.send({
     from,
     to,
-    subject: `Mensaplan KW ${kw} – vegane & glutenfreie Gerichte`,
-    html: buildHtml(week),
+    subject: `Was kann ich essen – KW ${kw}`,
+    html: buildHtml(week, kw),
     text: buildText(week),
   });
 }
 
-function buildHtml(week: FilteredMensaDay[][]): string {
-  let body = `
-    <div style="font-family:sans-serif;max-width:680px;margin:0 auto;color:#222">
-      <h2 style="color:#2d6a4f;margin-bottom:4px">Mensa-Check</h2>
-      <p style="color:#666;margin-top:0">vegane &amp; glutenfreie Gerichte diese Woche</p>
-  `;
+function buildHtml(week: FilteredMensaDay[][], kw: number): string {
+  const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr'];
+  const MONTHS = ['Jan', 'Feb', 'Mrz', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+  const MENSEN = ['Philosophenweg', 'Ernst-Abbe-Platz', 'Uni-Hauptgebäude'];
 
-  for (const dayMensen of week) {
-    if (!dayMensen[0]) continue;
-    const date = dayMensen[0].date;
-    const hasMeals = dayMensen.some((m) => m.meals.length > 0);
-
-    body += `<h3 style="color:#52796f;border-bottom:1px solid #d1e7dd;padding-bottom:4px;margin-top:24px">${formatDate(date)}</h3>`;
-
-    if (!hasMeals) {
-      body += `<p style="color:#999;margin:4px 0">Nichts Geeignetes.</p>`;
-      continue;
-    }
-
-    for (const mensa of dayMensen) {
-      if (mensa.meals.length === 0) continue;
-      body += `<p style="margin:8px 0 4px;font-weight:bold">${mensa.mensa}</p><ul style="margin:0;padding-left:20px">`;
-      for (const meal of mensa.meals) {
-        const icon = meal.status === 'suitable' ? '✅' : '⚠️';
-        body += `<li style="margin:4px 0">${icon} ${meal.title}`;
-        if (meal.skipComponents.length > 0) {
-          body += ` <span style="color:#888;font-size:0.85em">(ohne: ${meal.skipComponents.join(', ')})</span>`;
-        }
-        if (meal.priceStudent) {
-          body += ` <span style="color:#555;font-size:0.85em;font-weight:bold">${meal.priceStudent}</span>`;
-        }
-        body += ` <span style="color:#aaa;font-size:0.8em">[${meal.category}]</span></li>`;
-      }
-      body += '</ul>';
-    }
+  function parseDateParts(iso: string) {
+    const [, m, d] = iso.split('-');
+    return { day: d.replace(/^0/, ''), month: MONTHS[parseInt(m) - 1] };
   }
 
-  body += `<p style="color:#aaa;font-size:0.8em;margin-top:32px">Quelle: stw-thueringen.de · <a href="${process.env.NEXT_PUBLIC_URL || 'https://mensa-check.vercel.app'}">Website öffnen</a></p></div>`;
-  return body;
+  const url = process.env.NEXT_PUBLIC_URL || 'https://waskannichessen.vercel.app';
+
+  let html = `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f7f6f4; color: #0a0a0a; font-family: 'Helvetica Neue', Arial, sans-serif; }
+  .wrap { max-width: 680px; margin: 0 auto; background: #f7f6f4; }
+
+  .header { border-bottom: 2px solid #0a0a0a; padding: 32px 32px 12px; display: table; width: 100%; }
+  .header-left { display: table-cell; vertical-align: bottom; }
+  .header-right { display: table-cell; vertical-align: bottom; text-align: right; }
+  .title { font-size: 42px; font-weight: 700; letter-spacing: -0.03em; line-height: 0.9; text-transform: uppercase; }
+  .meta { font-size: 11px; font-weight: 300; letter-spacing: 0.12em; text-transform: uppercase; color: #888; line-height: 1.8; }
+  .kw-badge { font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; border: 1.5px solid #0a0a0a; padding: 3px 10px; display: inline-block; margin-bottom: 6px; }
+
+  .day-row { display: table; width: 100%; border-bottom: 1px solid #d8d8d8; }
+  .day-label { display: table-cell; width: 90px; border-right: 1px solid #d8d8d8; padding: 20px 16px 20px 32px; vertical-align: top; }
+  .day-name { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #888; display: block; }
+  .day-number { font-size: 52px; font-weight: 700; letter-spacing: -0.04em; line-height: 0.85; color: #0a0a0a; display: block; margin-top: 4px; }
+  .day-month { font-size: 10px; font-weight: 300; letter-spacing: 0.1em; text-transform: uppercase; color: #888; margin-top: 6px; display: block; }
+
+  .mensen { display: table-cell; vertical-align: top; }
+  .mensa-col { display: table-cell; width: 33.33%; border-right: 1px solid #d8d8d8; padding: 14px 14px; vertical-align: top; }
+  .mensa-col:last-child { border-right: none; }
+  .mensa-label { font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #888; margin-bottom: 10px; }
+
+  .meal { margin-bottom: 8px; padding: 8px 10px 8px 12px; }
+  .meal.suitable { background: #0a0a0a; color: #f7f6f4; border-left: 3px solid #0a0a0a; }
+  .meal.conditional { background: transparent; border: 1px solid #0a0a0a; border-left-width: 3px; }
+  .meal-name { font-size: 12px; font-weight: 500; line-height: 1.35; letter-spacing: -0.01em; }
+  .meal-skip { font-size: 10px; font-weight: 300; letter-spacing: 0.04em; margin-top: 3px; color: #aaa; }
+  .meal.conditional .meal-skip { color: #888; }
+  .meal-price { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; margin-top: 5px; }
+  .meal.suitable .meal-price { color: #d8d8d8; }
+  .meal.conditional .meal-price { color: #888; }
+
+  .day-nichts { padding: 20px 32px; font-size: 20px; font-weight: 300; color: #d8d8d8; }
+  .empty { font-size: 10px; font-weight: 300; letter-spacing: 0.1em; text-transform: uppercase; color: #d8d8d8; }
+
+  .legend { padding: 16px 32px; border-top: 1px solid #d8d8d8; }
+  .legend-row { display: table; width: 100%; }
+  .legend-item { display: table-cell; padding-right: 24px; }
+  .legend-inner { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #888; }
+  .swatch { display: inline-block; width: 12px; height: 12px; vertical-align: middle; margin-right: 6px; }
+  .swatch.suitable { background: #0a0a0a; }
+  .swatch.conditional { border: 1.5px solid #0a0a0a; border-left-width: 3px; }
+
+  .footer { padding: 20px 32px; font-size: 10px; font-weight: 300; letter-spacing: 0.08em; text-transform: uppercase; color: #888; border-top: 2px solid #0a0a0a; }
+  .footer a { color: #0a0a0a; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="title">Was kann<br>ich essen</div>
+    </div>
+    <div class="header-right">
+      <div class="kw-badge">KW ${kw}</div>
+      <div class="meta">Jena · 3 Mensen<br>vegan · glutenfrei</div>
+    </div>
+  </div>
+`;
+
+  week.forEach((dayMensen, i) => {
+    if (!dayMensen[0]) return;
+    const { day, month } = parseDateParts(dayMensen[0].date);
+    const empty = dayMensen.every((m) => m.meals.length === 0);
+
+    html += `<div class="day-row">`;
+    html += `<div class="day-label"><span class="day-name">${WEEKDAYS[i]}</span><span class="day-number">${day}</span><span class="day-month">${month}</span></div>`;
+
+    if (empty) {
+      html += `<div class="day-nichts">nichts :/</div>`;
+    } else {
+      html += `<div class="mensen"><table style="width:100%;border-collapse:collapse"><tr>`;
+      for (const name of MENSEN) {
+        const data = dayMensen.find((m) => m.mensa === name) ?? { mensa: name, date: '', meals: [] };
+        html += `<td class="mensa-col"><div class="mensa-label">${name}</div>`;
+        if (data.meals.length === 0) {
+          html += `<div class="empty">–</div>`;
+        } else {
+          for (const meal of data.meals) {
+            html += `<div class="meal ${meal.status}">`;
+            html += `<div class="meal-name">${meal.title}</div>`;
+            if (meal.skipComponents.length > 0) {
+              html += `<div class="meal-skip">ohne ${meal.skipComponents.join(', ')}</div>`;
+            }
+            if (meal.priceStudent) {
+              html += `<div class="meal-price">${meal.priceStudent}</div>`;
+            }
+            html += `</div>`;
+          }
+        }
+        html += `</td>`;
+      }
+      html += `</tr></table></div>`;
+    }
+
+    html += `</div>`;
+  });
+
+  html += `
+  <div class="legend">
+    <table class="legend-row"><tr>
+      <td class="legend-item"><span class="legend-inner"><span class="swatch suitable"></span>vegan &amp; glutenfrei</span></td>
+      <td class="legend-item"><span class="legend-inner"><span class="swatch conditional"></span>geeignet, Beilage weglassen</span></td>
+    </tr></table>
+  </div>
+
+  <div class="footer">
+    Jena · stw-thueringen.de &nbsp;·&nbsp; <a href="${url}">${url.replace('https://', '')}</a>
+  </div>
+
+</div>
+</body>
+</html>`;
+
+  return html;
 }
 
 function buildText(week: FilteredMensaDay[][]): string {
-  let text = 'Mensa-Check – vegane & glutenfreie Gerichte\n\n';
+  const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr'];
+  let text = 'Was kann ich essen – vegan & glutenfrei\n\n';
 
-  for (const dayMensen of week) {
-    if (!dayMensen[0]) continue;
-    text += `\n${formatDate(dayMensen[0].date)}\n${'─'.repeat(40)}\n`;
+  week.forEach((dayMensen, i) => {
+    if (!dayMensen[0]) return;
+    text += `\n${WEEKDAYS[i]}, ${formatDate(dayMensen[0].date)}\n${'─'.repeat(40)}\n`;
 
     const hasMeals = dayMensen.some((m) => m.meals.length > 0);
-    if (!hasMeals) { text += 'Nichts Geeignetes.\n'; continue; }
+    if (!hasMeals) { text += 'nichts :/\n'; return; }
 
     for (const mensa of dayMensen) {
       if (mensa.meals.length === 0) continue;
       text += `\n${mensa.mensa}:\n`;
       for (const meal of mensa.meals) {
-        const icon = meal.status === 'suitable' ? '✅' : '⚠️';
+        const icon = meal.status === 'suitable' ? '✓' : '~';
         text += `  ${icon} ${meal.title}`;
         if (meal.skipComponents.length > 0) text += ` (ohne: ${meal.skipComponents.join(', ')})`;
         if (meal.priceStudent) text += `  ${meal.priceStudent}`;
         text += '\n';
       }
     }
-  }
+  });
+
+  const url = process.env.NEXT_PUBLIC_URL || 'https://waskannichessen.vercel.app';
+  text += `\n${url}\n`;
   return text;
 }
