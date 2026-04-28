@@ -1,31 +1,42 @@
-import { getWeekDates, formatDate, formatDateShort, getWeekNumber } from '@/lib/dates';
+import { getWeekDates, getWeekNumber } from '@/lib/dates';
 import { fetchWeek } from '@/lib/scraper';
-import { filterWeek, type FilteredMensaDay } from '@/lib/filter';
+import { filterWeek, type FilteredMeal, type FilteredMensaDay } from '@/lib/filter';
 
 export const dynamic = 'force-dynamic';
 
 const MENSEN = ['Philosophenweg', 'Ernst-Abbe-Platz', 'Uni-Hauptgebäude'];
 
-function MensaCell({ data }: { data: FilteredMensaDay }) {
+const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr'];
+const MONTHS = ['Jan', 'Feb', 'Mrz', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+
+function parseDateParts(iso: string) {
+  const [, m, d] = iso.split('-');
+  return { day: d.replace(/^0/, ''), month: MONTHS[parseInt(m) - 1] };
+}
+
+function MealCard({ meal }: { meal: FilteredMeal }) {
   return (
-    <div className="mensa-cell">
-      <div className="mensa-name">{data.mensa}</div>
+    <div className={`meal ${meal.status}`}>
+      <div className="meal-name">{meal.title}</div>
+      {meal.skipComponents.length > 0 && (
+        <div className="meal-skip">ohne {meal.skipComponents.join(', ')}</div>
+      )}
+      <div className="meal-footer">
+        <span className="meal-cat">{meal.category}</span>
+        {meal.priceStudent && <span className="meal-price">{meal.priceStudent}</span>}
+      </div>
+    </div>
+  );
+}
+
+function MensaCol({ data }: { data: FilteredMensaDay }) {
+  return (
+    <div className="mensa-col">
+      <span className="mensa-label">{data.mensa}</span>
       {data.meals.length === 0 ? (
-        <p className="nothing">nichts Geeignetes</p>
+        <p className="empty">—</p>
       ) : (
-        <ul className="meal-list">
-          {data.meals.map((meal, i) => (
-            <li key={i} className={`meal-item ${meal.status}`}>
-              <div className="meal-title">
-                {meal.status === 'suitable' ? '✅' : '⚠️'} {meal.title}
-              </div>
-              {meal.skipComponents.length > 0 && (
-                <div className="meal-skip">weglassen: {meal.skipComponents.join(', ')}</div>
-              )}
-              <div className="meal-category">{meal.category}</div>
-            </li>
-          ))}
-        </ul>
+        data.meals.map((meal, i) => <MealCard key={i} meal={meal} />)
       )}
     </div>
   );
@@ -39,38 +50,47 @@ export default async function Page() {
 
   return (
     <>
-      <header>
-        <h1>Mensa-Check Jena</h1>
-        <p>vegane &amp; glutenfreie Gerichte · KW {kw}</p>
+      <header className="site-header">
+        <h1 className="site-title">Was kann<br />ich essen</h1>
+        <div className="site-meta">
+          <span className="kw-badge">KW {kw}</span>
+          <br />Jena · 3 Mensen
+          <br />vegan · glutenfrei
+        </div>
       </header>
 
-      <div className="container">
-        <div className="week-grid">
-          {week.map((dayMensen, dayIdx) => {
-            const date = dates[dayIdx];
-            return (
-              <div key={date} className="day-row">
-                <div className="day-header">{formatDate(date)}</div>
-                <div className="mensa-grid">
-                  {MENSEN.map((name) => {
-                    const data = dayMensen.find((m) => m.mensa === name) ?? {
-                      mensa: name,
-                      date,
-                      meals: [],
-                    };
-                    return <MensaCell key={name} data={data} />;
-                  })}
-                </div>
+      <main className="week">
+        {week.map((dayMensen, i) => {
+          const { day, month } = parseDateParts(dates[i]);
+          const empty = dayMensen.every((m) => m.meals.length === 0);
+          return (
+            <section key={dates[i]} className={`day${empty ? ' day--empty' : ''}`}>
+              <div className="day-label">
+                <span className="day-name">{WEEKDAYS[i]}</span>
+                <span className="day-number">{day}</span>
+                <span className="day-month">{month}</span>
               </div>
-            );
-          })}
-        </div>
+              <div className="mensen">
+                {MENSEN.map((name) => {
+                  const data = dayMensen.find((m) => m.mensa === name) ?? { mensa: name, date: dates[i], meals: [] };
+                  return <MensaCol key={name} data={data} />;
+                })}
+              </div>
+            </section>
+          );
+        })}
+      </main>
 
-        <div className="legend">
-          <span><span style={{ background: '#d8f3dc', padding: '2px 6px', borderRadius: 4 }}>✅ geeignet</span> — vegan &amp; glutenfrei</span>
-          <span><span style={{ background: '#fff3cd', padding: '2px 6px', borderRadius: 4 }}>⚠️ bedingt</span> — vegan, nur Beilage weglassen</span>
+      <footer className="legend">
+        <div className="legend-item">
+          <div className="legend-swatch suitable" />
+          <span>vegan &amp; glutenfrei</span>
         </div>
-      </div>
+        <div className="legend-item">
+          <div className="legend-swatch conditional" />
+          <span>geeignet, Beilage weglassen</span>
+        </div>
+      </footer>
     </>
   );
 }

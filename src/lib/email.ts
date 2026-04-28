@@ -50,7 +50,10 @@ function buildHtml(week: FilteredMensaDay[][]): string {
         const icon = meal.status === 'suitable' ? '✅' : '⚠️';
         body += `<li style="margin:4px 0">${icon} ${meal.title}`;
         if (meal.skipComponents.length > 0) {
-          body += ` <span style="color:#888;font-size:0.85em">(weglassen: ${meal.skipComponents.join(', ')})</span>`;
+          body += ` <span style="color:#888;font-size:0.85em">(ohne: ${meal.skipComponents.join(', ')})</span>`;
+        }
+        if (meal.priceStudent) {
+          body += ` <span style="color:#555;font-size:0.85em;font-weight:bold">${meal.priceStudent}</span>`;
         }
         body += ` <span style="color:#aaa;font-size:0.8em">[${meal.category}]</span></li>`;
       }
@@ -78,7 +81,8 @@ function buildText(week: FilteredMensaDay[][]): string {
       for (const meal of mensa.meals) {
         const icon = meal.status === 'suitable' ? '✅' : '⚠️';
         text += `  ${icon} ${meal.title}`;
-        if (meal.skipComponents.length > 0) text += ` (weglassen: ${meal.skipComponents.join(', ')})`;
+        if (meal.skipComponents.length > 0) text += ` (ohne: ${meal.skipComponents.join(', ')})`;
+        if (meal.priceStudent) text += `  ${meal.priceStudent}`;
         text += '\n';
       }
     }

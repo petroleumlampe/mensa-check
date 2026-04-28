@@ -15,6 +15,7 @@ export interface FilteredMeal {
   status: MealStatus;
   skipComponents: string[];
   category: string;
+  priceStudent: string | null;
 }
 
 export interface FilteredMensaDay {
@@ -52,7 +53,7 @@ function filterMeal(meal: Meal, categoryName: string): FilteredMeal | null {
   const glutenComponents = meal.components.filter((c) => hasGluten(c.codes));
 
   if (glutenComponents.length === 0) {
-    return { title: meal.title, status: 'suitable', skipComponents: [], category: categoryName };
+    return { title: meal.title, status: 'suitable', skipComponents: [], category: categoryName, priceStudent: meal.priceStudent };
   }
 
   // If ALL gluten-containing components are identifiable side dishes, meal is conditionally OK
@@ -63,6 +64,7 @@ function filterMeal(meal: Meal, categoryName: string): FilteredMeal | null {
       status: 'conditional',
       skipComponents: glutenComponents.map((c) => c.name),
       category: categoryName,
+      priceStudent: meal.priceStudent,
     };
   }
 

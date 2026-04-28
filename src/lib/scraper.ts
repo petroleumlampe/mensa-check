@@ -9,6 +9,7 @@ export interface Meal {
   title: string;
   symbols: string[];
   components: Component[];
+  priceStudent: string | null;
 }
 
 export interface Category {
@@ -70,19 +71,18 @@ function parseHtml(html: string): Category[] {
   // XHR response is the *inner* HTML of #speiseplan (no wrapper element).
   // Full page has the wrapper. Support both.
   const scope = $('#speiseplan').length ? '#speiseplan ' : '';
-  $(`${scope}.splGroupWrapper, ${scope}.rowMeal`)
-    .each((_, el) => {
-      if ($(el).hasClass('splGroupWrapper')) {
-        const name = $(el).find('.splGroup').first().text().replace(/\s+/g, ' ').trim();
-        if (name && name.length > 2 && !name.toLowerCase().includes('preis')) {
-          current = { name, meals: [] };
-          categories.push(current);
-        }
-      } else if ($(el).hasClass('rowMeal') && current) {
-        const meal = parseMeal($, el);
-        if (meal) current.meals.push(meal);
+  $(`${scope}.splGroupWrapper, ${scope}.rowMeal`).each((_, el) => {
+    if ($(el).hasClass('splGroupWrapper')) {
+      const name = $(el).find('.splGroup').first().text().replace(/\s+/g, ' ').trim();
+      if (name && name.length > 2 && !name.toLowerCase().includes('preis')) {
+        current = { name, meals: [] };
+        categories.push(current);
       }
-    });
+    } else if ($(el).hasClass('rowMeal') && current) {
+      const meal = parseMeal($, el);
+      if (meal) current.meals.push(meal);
+    }
+  });
 
   return categories;
 }
@@ -103,7 +103,11 @@ function parseMeal($: ReturnType<typeof load>, el: any): Meal | null {
     components = [{ name: title, codes: allCodes.split(',').map((s: string) => s.trim()).filter(Boolean) }];
   }
 
-  return { title, symbols, components };
+  // Price: "2,00 / 4,40 / 5,80 €" — take student price (first value)
+  const rawPrice = $(el).find('.mealPreise').text().replace(/&euro;/g, '€').trim();
+  const priceStudent = rawPrice ? rawPrice.split('/')[0].trim().replace('€', '').trim() + ' €' : null;
+
+  return { title, symbols, components, priceStudent };
 }
 
 function parseComponents(html: string): Component[] {
