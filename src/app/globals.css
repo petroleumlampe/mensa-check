@@ -292,11 +292,25 @@ body {
   opacity: 0.28;
 }
 
+.day--past .day-nichts {
+  color: var(--ink);
+}
+
+.day--past .empty {
+  color: var(--ink);
+}
+
 /* ── DINNER BLOCK ────────────────────────────────────────── */
 .dinner-block {
   margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--light);
+  padding: 10px;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent 0,
+    transparent 4px,
+    rgba(0, 0, 0, 0.045) 4px,
+    rgba(0, 0, 0, 0.045) 5px
+  );
   position: relative;
 }
 
