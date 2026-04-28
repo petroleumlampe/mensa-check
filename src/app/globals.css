@@ -304,10 +304,28 @@ body {
 .dinner-block {
   margin-top: 14px;
   padding: 10px;
-  background-color: #e2e1df;
-  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.18) 1px, transparent 1px);
+  background-color: #eceae7;
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.14) 1px, transparent 1px);
   background-size: 6px 6px;
   position: relative;
+  overflow: hidden;
+}
+
+.dinner-block::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 36px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent 0,
+    transparent 3px,
+    rgba(0, 0, 0, 0.1) 3px,
+    rgba(0, 0, 0, 0.1) 4px
+  );
+  pointer-events: none;
 }
 
 .dinner-label {
