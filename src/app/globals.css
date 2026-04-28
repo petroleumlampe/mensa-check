@@ -116,7 +116,6 @@ body {
 .mensen {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  flex: 1;
 }
 
 .mensa-col {
@@ -187,16 +186,6 @@ body {
 
 .meal.suitable .meal-price { color: var(--light); }
 .meal.conditional .meal-price { color: var(--mid); }
-
-.meal-mensa {
-  font-size: 0.6rem;
-  font-weight: 300;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.meal.suitable .meal-mensa { color: #aaa; }
-.meal.conditional .meal-mensa { color: var(--mid); }
 
 .meal-skip {
   font-size: 0.65rem;
@@ -329,4 +318,8 @@ body {
   background-image: radial-gradient(circle, rgba(0, 0, 0, 0.14) 1px, transparent 1px);
   background-size: 6px 6px;
   padding: 8px;
+}
+
+.dinner-meals .meal.conditional {
+  background: var(--paper);
 }
