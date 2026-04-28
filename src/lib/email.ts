@@ -34,6 +34,16 @@ function buildHtml(week: FilteredMensaDay[][], kw: number): string {
     return { day: d.replace(/^0/, ''), month: MONTHS[parseInt(m) - 1] };
   }
 
+  const renderMeal = (meal: FilteredMensaDay['meals'][0]): string => {
+    let s = `<div class="meal ${meal.status}">`;
+    s += `<div class="meal-name">${meal.title}</div>`;
+    if (meal.skipComponents.length > 0) s += `<div class="meal-skip">ohne ${meal.skipComponents.join(', ')}</div>`;
+    if (meal.containsHafer) s += `<div class="meal-hafer">enthält Hafer (Hf)</div>`;
+    if (meal.priceStudent) s += `<div class="meal-price">${meal.priceStudent}</div>`;
+    s += `</div>`;
+    return s;
+  };
+
   const url = process.env.NEXT_PUBLIC_URL || 'https://waskannichessen.vercel.app';
 
   let html = `
@@ -67,13 +77,19 @@ function buildHtml(week: FilteredMensaDay[][], kw: number): string {
 
   .meal { margin-bottom: 8px; padding: 8px 10px 8px 12px; }
   .meal.suitable { background: #0a0a0a; color: #f7f6f4; border-left: 3px solid #0a0a0a; }
-  .meal.conditional { background: transparent; border: 1px solid #0a0a0a; border-left-width: 3px; }
+  .meal.conditional { background: #f7f6f4; border: 1px solid #0a0a0a; border-left-width: 3px; }
   .meal-name { font-size: 12px; font-weight: 500; line-height: 1.35; letter-spacing: -0.01em; }
   .meal-skip { font-size: 10px; font-weight: 300; letter-spacing: 0.04em; margin-top: 3px; color: #aaa; }
   .meal.conditional .meal-skip { color: #888; }
+  .meal-hafer { font-size: 10px; font-weight: 300; letter-spacing: 0.04em; margin-top: 3px; color: #aaa; font-style: italic; }
+  .meal.conditional .meal-hafer { color: #888; }
   .meal-price { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; margin-top: 5px; }
   .meal.suitable .meal-price { color: #d8d8d8; }
   .meal.conditional .meal-price { color: #888; }
+
+  .dinner-block { margin-top: 10px; }
+  .dinner-label { font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #888; padding-bottom: 6px; border-bottom: 1px solid #d8d8d8; margin-bottom: 6px; }
+  .dinner-meals { background-color: #eceae7; padding: 6px; }
 
   .day-nichts { padding: 20px 32px; font-size: 20px; font-weight: 300; color: #d8d8d8; }
   .empty { font-size: 10px; font-weight: 300; letter-spacing: 0.1em; text-transform: uppercase; color: #d8d8d8; }
@@ -119,19 +135,18 @@ function buildHtml(week: FilteredMensaDay[][], kw: number): string {
       for (const name of MENSEN) {
         const data = dayMensen.find((m) => m.mensa === name) ?? { mensa: name, date: '', meals: [] };
         html += `<td class="mensa-col"><div class="mensa-label">${name}</div>`;
-        if (data.meals.length === 0) {
+        const DINNER_CATS = ['abendessen', 'abendmensa', 'abend'];
+        const lunchMeals = data.meals.filter(m => !DINNER_CATS.some(c => m.category.toLowerCase().includes(c)));
+        const dinnerMeals = data.meals.filter(m => DINNER_CATS.some(c => m.category.toLowerCase().includes(c)));
+
+        if (lunchMeals.length === 0 && dinnerMeals.length === 0) {
           html += `<div class="empty">–</div>`;
         } else {
-          for (const meal of data.meals) {
-            html += `<div class="meal ${meal.status}">`;
-            html += `<div class="meal-name">${meal.title}</div>`;
-            if (meal.skipComponents.length > 0) {
-              html += `<div class="meal-skip">ohne ${meal.skipComponents.join(', ')}</div>`;
-            }
-            if (meal.priceStudent) {
-              html += `<div class="meal-price">${meal.priceStudent}</div>`;
-            }
-            html += `</div>`;
+          lunchMeals.forEach(meal => { html += renderMeal(meal); });
+          if (dinnerMeals.length > 0) {
+            html += `<div class="dinner-block"><div class="dinner-label">Abend</div><div class="dinner-meals">`;
+            dinnerMeals.forEach(meal => { html += renderMeal(meal); });
+            html += `</div></div>`;
           }
         }
         html += `</td>`;
@@ -172,15 +187,30 @@ function buildText(week: FilteredMensaDay[][]): string {
     const hasMeals = dayMensen.some((m) => m.meals.length > 0);
     if (!hasMeals) { text += 'nichts :/\n'; return; }
 
+    const DINNER_CATS = ['abendessen', 'abendmensa', 'abend'];
     for (const mensa of dayMensen) {
       if (mensa.meals.length === 0) continue;
       text += `\n${mensa.mensa}:\n`;
-      for (const meal of mensa.meals) {
+      const lunch = mensa.meals.filter(m => !DINNER_CATS.some(c => m.category.toLowerCase().includes(c)));
+      const dinner = mensa.meals.filter(m => DINNER_CATS.some(c => m.category.toLowerCase().includes(c)));
+      for (const meal of lunch) {
         const icon = meal.status === 'suitable' ? '✓' : '~';
         text += `  ${icon} ${meal.title}`;
         if (meal.skipComponents.length > 0) text += ` (ohne: ${meal.skipComponents.join(', ')})`;
+        if (meal.containsHafer) text += ` [enthält Hafer]`;
         if (meal.priceStudent) text += `  ${meal.priceStudent}`;
         text += '\n';
+      }
+      if (dinner.length > 0) {
+        text += `  Abend:\n`;
+        for (const meal of dinner) {
+          const icon = meal.status === 'suitable' ? '✓' : '~';
+          text += `    ${icon} ${meal.title}`;
+          if (meal.skipComponents.length > 0) text += ` (ohne: ${meal.skipComponents.join(', ')})`;
+          if (meal.containsHafer) text += ` [enthält Hafer]`;
+          if (meal.priceStudent) text += `  ${meal.priceStudent}`;
+          text += '\n';
+        }
       }
     }
   });
