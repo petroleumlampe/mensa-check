@@ -28,6 +28,9 @@ function MealCard({ meal }: { meal: FilteredMeal }) {
       {meal.skipComponents.length > 0 && (
         <div className="meal-skip">ohne {meal.skipComponents.join(', ')}</div>
       )}
+      {meal.containsHafer && (
+        <div className="meal-hafer">enthält Hafer (Hf)</div>
+      )}
       {meal.priceStudent && (
         <div className="meal-footer">
           <span className="meal-price">{meal.priceStudent}</span>

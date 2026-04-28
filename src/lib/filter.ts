@@ -1,6 +1,7 @@
 import type { Meal, MensaDay } from './scraper';
 
-export const GLUTEN_CODES = ['Wz', 'Di', 'Ge', 'Ro', 'Hf', 'Ka', 'Km'];
+export const GLUTEN_CODES = ['Wz', 'Di', 'Ge', 'Ro', 'Ka', 'Km'];
+const HAFER_CODE = 'Hf';
 
 const INCLUDE_CATEGORIES = ['mittagessen', 'abendessen', 'mittagsversorgung', 'abendmensa', 'mittag', 'abend'];
 const EXCLUDE_CATEGORIES = ['frühstück', 'fruehstueck', 'breakfast', 'zwischenversorgung', 'zwischen'];
@@ -14,6 +15,7 @@ export interface FilteredMeal {
   title: string;
   status: MealStatus;
   skipComponents: string[];
+  containsHafer: boolean;
   category: string;
   priceStudent: string | null;
 }
@@ -50,10 +52,11 @@ function shouldInclude(categoryName: string): boolean {
 function filterMeal(meal: Meal, categoryName: string): FilteredMeal | null {
   if (!isVegan(meal)) return null;
 
+  const containsHafer = meal.components.some((c) => c.codes.includes(HAFER_CODE));
   const glutenComponents = meal.components.filter((c) => hasGluten(c.codes));
 
   if (glutenComponents.length === 0) {
-    return { title: meal.title, status: 'suitable', skipComponents: [], category: categoryName, priceStudent: meal.priceStudent };
+    return { title: meal.title, status: 'suitable', skipComponents: [], containsHafer, category: categoryName, priceStudent: meal.priceStudent };
   }
 
   // If ALL gluten-containing components are identifiable side dishes, meal is conditionally OK
@@ -63,6 +66,7 @@ function filterMeal(meal: Meal, categoryName: string): FilteredMeal | null {
       title: meal.title,
       status: 'conditional',
       skipComponents: glutenComponents.map((c) => c.name),
+      containsHafer,
       category: categoryName,
       priceStudent: meal.priceStudent,
     };
