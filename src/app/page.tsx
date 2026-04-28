@@ -13,6 +13,14 @@ function parseDateParts(iso: string) {
   return { day: d.replace(/^0/, ''), month: MONTHS[parseInt(m) - 1] };
 }
 
+function isPastDate(iso: string): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const date = new Date(iso + 'T12:00:00');
+  date.setHours(0, 0, 0, 0);
+  return date < today;
+}
+
 function MealCard({ meal }: { meal: FilteredMeal }) {
   return (
     <div className={`meal ${meal.status}`}>
@@ -29,14 +37,31 @@ function MealCard({ meal }: { meal: FilteredMeal }) {
   );
 }
 
+const DINNER_CATEGORIES = ['abendessen', 'abendmensa', 'abend'];
+
+function isDinner(meal: FilteredMeal): boolean {
+  return DINNER_CATEGORIES.some((cat) => meal.category.toLowerCase().includes(cat));
+}
+
 function MensaCol({ data }: { data: FilteredMensaDay }) {
+  const lunchMeals = data.meals.filter((m) => !isDinner(m));
+  const dinnerMeals = data.meals.filter((m) => isDinner(m));
+
   return (
     <div className="mensa-col">
       <div className="mensa-label">{data.mensa}</div>
-      {data.meals.length === 0 ? (
+      {lunchMeals.length === 0 && dinnerMeals.length === 0 ? (
         <div className="empty">–</div>
       ) : (
-        data.meals.map((meal, i) => <MealCard key={i} meal={meal} />)
+        <>
+          {lunchMeals.map((meal, i) => <MealCard key={i} meal={meal} />)}
+          {dinnerMeals.length > 0 && (
+            <div className="dinner-block">
+              <div className="dinner-label">Abend</div>
+              {dinnerMeals.map((meal, i) => <MealCard key={i} meal={meal} />)}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -65,7 +90,7 @@ export default async function Page() {
           const empty = dayMensen.every((m) => m.meals.length === 0);
 
           return (
-            <section key={dates[i]} className="day">
+            <section key={dates[i]} className={`day${isPastDate(dates[i]) ? ' day--past' : ''}`}>
               <div className="day-label">
                 <span className="day-name">{WEEKDAYS[i]}</span>
                 <span className="day-number">{day}</span>

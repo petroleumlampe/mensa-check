@@ -275,3 +275,35 @@ body {
   .day-label { padding: 16px 12px 16px 0; }
   .mensa-col { padding: 10px; }
 }
+
+/* ── PAST DAY ────────────────────────────────────────────── */
+.day--past {
+  opacity: 0.28;
+}
+
+/* ── DINNER BLOCK ────────────────────────────────────────── */
+.dinner-block {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--light);
+  position: relative;
+}
+
+.dinner-label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mid);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dinner-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--light);
+}
