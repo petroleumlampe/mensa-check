@@ -23,24 +23,37 @@ export interface MensaDay {
   error?: string;
 }
 
+// resources_id from the hidden #hiddenmensarscid field on each Mensa page
 const MENSEN = [
-  { name: 'Philosophenweg', slug: 'mensa-philosophenweg' },
-  { name: 'Ernst-Abbe-Platz', slug: 'mensa-ernst-abbe-platz' },
-  { name: 'Uni-Hauptgebäude', slug: 'mensa-uni-hauptgebaeude' },
+  { name: 'Philosophenweg', rscid: '59' },
+  { name: 'Ernst-Abbe-Platz', rscid: '41' },
+  { name: 'Uni-Hauptgebäude', rscid: '64' },
 ];
+
+const ENDPOINT = 'https://www.stw-thueringen.de/xhr/loadspeiseplan.html';
+
+// date: YYYY-MM-DD → DD.MM.YYYY
+function toGermanDate(isoDate: string): string {
+  const [y, m, d] = isoDate.split('-');
+  return `${d}.${m}.${y}`;
+}
 
 export async function fetchWeek(dates: string[]): Promise<MensaDay[][]> {
   return Promise.all(dates.map((date) => fetchDay(date)));
 }
 
 export async function fetchDay(date: string): Promise<MensaDay[]> {
-  return Promise.all(MENSEN.map((m) => fetchMensaDay(m.name, m.slug, date)));
+  return Promise.all(MENSEN.map((m) => fetchMensaDay(m.name, m.rscid, date)));
 }
 
-async function fetchMensaDay(name: string, slug: string, date: string): Promise<MensaDay> {
-  const url = `https://www.stw-thueringen.de/mensen/jena/${slug}.html?date=${date}`;
+async function fetchMensaDay(name: string, rscid: string, date: string): Promise<MensaDay> {
   try {
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `resources_id=${rscid}&date=${toGermanDate(date)}`,
+      cache: 'no-store',
+    });
     if (!res.ok) return { mensa: name, date, categories: [], error: `HTTP ${res.status}` };
     const html = await res.text();
     return { mensa: name, date, categories: parseHtml(html) };
