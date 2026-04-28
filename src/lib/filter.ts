@@ -32,6 +32,14 @@ function isSideComponent(name: string): boolean {
   return SIDE_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
+function isVegan(meal: Meal): boolean {
+  // The XHR endpoint leaves meal-symbols empty — check component codes instead.
+  // A meal is vegan if every component carries V*.
+  if (meal.symbols.includes('V*')) return true;
+  if (meal.components.length === 0) return false;
+  return meal.components.every((c) => c.codes.includes('V*'));
+}
+
 function shouldInclude(categoryName: string): boolean {
   const lower = categoryName.toLowerCase().trim();
   if (EXCLUDE_CATEGORIES.some((ex) => lower.includes(ex))) return false;
@@ -39,8 +47,7 @@ function shouldInclude(categoryName: string): boolean {
 }
 
 function filterMeal(meal: Meal, categoryName: string): FilteredMeal | null {
-  // Must be vegan
-  if (!meal.symbols.includes('V*')) return null;
+  if (!isVegan(meal)) return null;
 
   const glutenComponents = meal.components.filter((c) => hasGluten(c.codes));
 
