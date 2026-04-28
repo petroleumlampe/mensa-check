@@ -303,23 +303,6 @@ body {
 /* ── DINNER BLOCK ────────────────────────────────────────── */
 .dinner-block {
   margin-top: 14px;
-  padding: 10px;
-  background-color: #eceae7;
-  background-image:
-    repeating-linear-gradient(
-      -45deg,
-      transparent 0, transparent 3px,
-      rgba(0, 0, 0, 0.1) 3px, rgba(0, 0, 0, 0.1) 4px
-    ),
-    radial-gradient(circle, rgba(0, 0, 0, 0.14) 1px, transparent 1px);
-  background-size: 36px 100%, 6px 6px;
-  background-position: right top, 0 0;
-  background-repeat: no-repeat, repeat;
-  position: relative;
-}
-
-.dinner-block .meal.conditional {
-  background: var(--paper);
 }
 
 .dinner-label {
@@ -338,15 +321,12 @@ body {
   content: '';
   flex: 1;
   height: 1px;
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--light);
 }
 
-.dinner-block .meal.suitable {
-  background: var(--paper);
-  color: var(--ink);
-  border: 1px solid var(--ink);
-  border-left-width: 3px;
+.dinner-meals {
+  background-color: #eceae7;
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.14) 1px, transparent 1px);
+  background-size: 6px 6px;
+  padding: 8px;
 }
-
-.dinner-block .meal.suitable .meal-price { color: var(--mid); }
-.dinner-block .meal-hafer { color: var(--mid); }

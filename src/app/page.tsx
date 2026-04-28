@@ -61,7 +61,9 @@ function MensaCol({ data }: { data: FilteredMensaDay }) {
           {dinnerMeals.length > 0 && (
             <div className="dinner-block">
               <div className="dinner-label">Abend</div>
-              {dinnerMeals.map((meal, i) => <MealCard key={i} meal={meal} />)}
+              <div className="dinner-meals">
+                {dinnerMeals.map((meal, i) => <MealCard key={i} meal={meal} />)}
+              </div>
             </div>
           )}
         </>
