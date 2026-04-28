@@ -90,10 +90,11 @@ export default async function Page() {
       <main className="week">
         {week.map((dayMensen, i) => {
           const { day, month } = parseDateParts(dates[i]);
-          const empty = dayMensen.every((m) => m.meals.length === 0);
+          const isPast = isPastDate(dates[i]);
+          const empty = !isPast && dayMensen.every((m) => m.meals.length === 0);
 
           return (
-            <section key={dates[i]} className={`day${isPastDate(dates[i]) ? ' day--past' : ''}`}>
+            <section key={dates[i]} className={`day${isPast ? ' day--past' : ''}`}>
               <div className="day-label">
                 <span className="day-name">{WEEKDAYS[i]}</span>
                 <span className="day-number">{day}</span>
