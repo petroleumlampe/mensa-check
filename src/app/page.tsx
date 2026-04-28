@@ -64,18 +64,22 @@ export default async function Page() {
           const { day, month } = parseDateParts(dates[i]);
           const empty = dayMensen.every((m) => m.meals.length === 0);
           return (
-            <section key={dates[i]} className={`day${empty ? ' day--empty' : ''}`}>
+            <section key={dates[i]} className="day">
               <div className="day-label">
                 <span className="day-name">{WEEKDAYS[i]}</span>
                 <span className="day-number">{day}</span>
                 <span className="day-month">{month}</span>
               </div>
-              <div className="mensen">
-                {MENSEN.map((name) => {
-                  const data = dayMensen.find((m) => m.mensa === name) ?? { mensa: name, date: dates[i], meals: [] };
-                  return <MensaCol key={name} data={data} />;
-                })}
-              </div>
+              {empty ? (
+                <div className="day-nichts">nichts :/</div>
+              ) : (
+                <div className="mensen">
+                  {MENSEN.map((name) => {
+                    const data = dayMensen.find((m) => m.mensa === name) ?? { mensa: name, date: dates[i], meals: [] };
+                    return <MensaCol key={name} data={data} />;
+                  })}
+                </div>
+              )}
             </section>
           );
         })}
