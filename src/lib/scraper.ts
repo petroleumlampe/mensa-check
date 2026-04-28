@@ -73,7 +73,7 @@ function parseHtml(html: string): Category[] {
   const scope = $('#speiseplan').length ? '#speiseplan ' : '';
   $(`${scope}.splGroupWrapper, ${scope}.rowMeal`).each((_, el) => {
     if ($(el).hasClass('splGroupWrapper')) {
-      const name = $(el).find('.splGroup').first().text().replace(/\s+/g, ' ').trim();
+      const name = $(el).find('.splGroup, .splGroupAbendmensa').first().text().replace(/\s+/g, ' ').trim();
       if (name && name.length > 2 && !name.toLowerCase().includes('preis')) {
         current = { name, meals: [] };
         categories.push(current);
