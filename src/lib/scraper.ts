@@ -68,10 +68,9 @@ function parseHtml(html: string): Category[] {
   let current: Category | null = null;
 
   // XHR response is the *inner* HTML of #speiseplan (no wrapper element).
-  // Full page has the wrapper. Support both by falling back to root.
-  const container = $('#speiseplan').length ? $('#speiseplan') : $.root();
-  container
-    .find('.splGroupWrapper, .rowMeal')
+  // Full page has the wrapper. Support both.
+  const scope = $('#speiseplan').length ? '#speiseplan ' : '';
+  $(`${scope}.splGroupWrapper, ${scope}.rowMeal`)
     .each((_, el) => {
       if ($(el).hasClass('splGroupWrapper')) {
         const name = $(el).find('.splGroup').first().text().replace(/\s+/g, ' ').trim();
