@@ -13,45 +13,31 @@ function parseDateParts(iso: string) {
   return { day: d.replace(/^0/, ''), month: MONTHS[parseInt(m) - 1] };
 }
 
-// Short display names for Mensa labels on combined cards
-const SHORT: Record<string, string> = {
-  'Philosophenweg': 'Philos.',
-  'Ernst-Abbe-Platz': 'Ernst-Abbe',
-  'Uni-Hauptgebäude': 'Uni-HG',
-};
-
-interface MealGroup {
-  meal: FilteredMeal;
-  mensen: string[];
-}
-
-function groupMeals(dayMensen: FilteredMensaDay[]): MealGroup[] {
-  const groups = new Map<string, MealGroup>();
-  for (const mensa of dayMensen) {
-    for (const meal of mensa.meals) {
-      if (groups.has(meal.title)) {
-        groups.get(meal.title)!.mensen.push(mensa.mensa);
-      } else {
-        groups.set(meal.title, { meal, mensen: [mensa.mensa] });
-      }
-    }
-  }
-  return Array.from(groups.values());
-}
-
-function MealCard({ group }: { group: MealGroup }) {
-  const { meal, mensen } = group;
-  const mensaLabel = mensen.map((m) => SHORT[m] ?? m).join(' · ');
+function MealCard({ meal }: { meal: FilteredMeal }) {
   return (
     <div className={`meal ${meal.status}`}>
       <div className="meal-name">{meal.title}</div>
       {meal.skipComponents.length > 0 && (
         <div className="meal-skip">ohne {meal.skipComponents.join(', ')}</div>
       )}
-      <div className="meal-footer">
-        <span className="meal-mensa">{mensaLabel}</span>
-        {meal.priceStudent && <span className="meal-price">{meal.priceStudent}</span>}
-      </div>
+      {meal.priceStudent && (
+        <div className="meal-footer">
+          <span className="meal-price">{meal.priceStudent}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MensaCol({ data }: { data: FilteredMensaDay }) {
+  return (
+    <div className="mensa-col">
+      <div className="mensa-label">{data.mensa}</div>
+      {data.meals.length === 0 ? (
+        <div className="empty">–</div>
+      ) : (
+        data.meals.map((meal, i) => <MealCard key={i} meal={meal} />)
+      )}
     </div>
   );
 }
@@ -76,8 +62,7 @@ export default async function Page() {
       <main className="week">
         {week.map((dayMensen, i) => {
           const { day, month } = parseDateParts(dates[i]);
-          const groups = groupMeals(dayMensen);
-          const empty = groups.length === 0;
+          const empty = dayMensen.every((m) => m.meals.length === 0);
 
           return (
             <section key={dates[i]} className="day">
@@ -90,10 +75,11 @@ export default async function Page() {
               {empty ? (
                 <div className="day-nichts">nichts :/</div>
               ) : (
-                <div className="meals-list">
-                  {groups.map((group, j) => (
-                    <MealCard key={j} group={group} />
-                  ))}
+                <div className="mensen">
+                  {MENSEN.map((name) => {
+                    const data = dayMensen.find((m) => m.mensa === name) ?? { mensa: name, date: dates[i], meals: [] };
+                    return <MensaCol key={name} data={data} />;
+                  })}
                 </div>
               )}
             </section>

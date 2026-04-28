@@ -112,13 +112,29 @@ body {
   display: block;
 }
 
-/* ── MEALS LIST (flat, deduplicated) ─────────────────────── */
-.meals-list {
+/* ── MENSA COLUMNS ───────────────────────────────────────── */
+.mensen {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  flex: 1;
+}
+
+.mensa-col {
   padding: 16px 20px;
-  align-content: start;
+  border-right: 1px solid var(--light);
+}
+
+.mensa-col:last-child {
+  border-right: none;
+}
+
+.mensa-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mid);
+  margin-bottom: 10px;
 }
 
 /* ── MEAL CARDS ──────────────────────────────────────────── */
@@ -247,7 +263,9 @@ body {
   .week { padding: 0 16px 40px; }
   .day { grid-template-columns: 100px 1fr; }
   .day-number { font-size: 3rem; }
-  .meals-list { grid-template-columns: 1fr; padding: 12px; gap: 8px; }
+  .mensen { grid-template-columns: 1fr; }
+  .mensa-col { border-right: none; border-bottom: 1px solid var(--light); padding: 12px; }
+  .mensa-col:last-child { border-bottom: none; }
   .legend { padding: 16px; }
 }
 
@@ -255,5 +273,5 @@ body {
   .day { grid-template-columns: 80px 1fr; }
   .day-number { font-size: 2.4rem; }
   .day-label { padding: 16px 12px 16px 0; }
-  .meals-list { padding: 10px 10px 10px 8px; }
+  .mensa-col { padding: 10px; }
 }
