@@ -67,8 +67,10 @@ function parseHtml(html: string): Category[] {
   const categories: Category[] = [];
   let current: Category | null = null;
 
-  // .splGroupWrapper (category headers) and .rowMeal (meals) are siblings inside #speiseplan
-  $('#speiseplan')
+  // XHR response is the *inner* HTML of #speiseplan (no wrapper element).
+  // Full page has the wrapper. Support both by falling back to root.
+  const container = $('#speiseplan').length ? $('#speiseplan') : $.root();
+  container
     .find('.splGroupWrapper, .rowMeal')
     .each((_, el) => {
       if ($(el).hasClass('splGroupWrapper')) {
