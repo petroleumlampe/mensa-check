@@ -53,7 +53,7 @@ function buildHtml(week: FilteredMensaDay[][], kw: number): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; text-size-adjust: 100%; }
   body { background: #f7f6f4; color: #0a0a0a; font-family: 'Helvetica Neue', Arial, sans-serif; }
   .wrap { max-width: 680px; margin: 0 auto; background: #f7f6f4; }
 

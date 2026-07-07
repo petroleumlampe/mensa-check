@@ -1,6 +1,6 @@
 import type { Meal, MensaDay } from './scraper';
 
-export const GLUTEN_CODES = ['Wz', 'Di', 'Ge', 'Ro', 'Ka', 'Km'];
+export const GLUTEN_CODES = ['Wz', 'Di', 'Ge', 'Ro', 'Ka', 'Km', 'Gs'];
 const HAFER_CODE = 'Hf';
 
 const INCLUDE_CATEGORIES = ['mittagessen', 'abendessen', 'mittagsversorgung', 'abendmensa', 'mittag', 'abend'];
